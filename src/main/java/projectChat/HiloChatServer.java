@@ -23,6 +23,7 @@ public class HiloChatServer implements Runnable {
 
     private void initStreams() throws IOException {
         netIn = new DataInputStream(socket.getInputStream());
+        netOut = new DataOutputStream(socket.getOutputStream());
     }
 
     private void sendMsg(String msg) throws IOException {
@@ -41,11 +42,14 @@ public class HiloChatServer implements Runnable {
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
+            } else {
+                // Notificar al remitente que el destinatario no está conectado
+                netOut.writeUTF("Error: Usuario " + recipient + " no está conectado.");
             }
         } else {
             for (Socket soc : vector) {
-                netOut = new DataOutputStream(soc.getOutputStream());
-                netOut.writeUTF(msg);
+                DataOutputStream out = new DataOutputStream(soc.getOutputStream());
+                out.writeUTF(msg);
             }
         }
     }
@@ -58,7 +62,7 @@ public class HiloChatServer implements Runnable {
             usuarios.put(username, socket); // Agrega el nombre de usuario y socket al hashmap
 
             // Notifica a todos que el usuario se ha unido
-            String joinMsg = "m^Server@localhost^-^" + username + " se ha unido desde " + socket.getInetAddress() + "^";
+            String joinMsg = username + " se ha unido";
             sendMsg(joinMsg);
 
             while (true) {
@@ -66,7 +70,22 @@ public class HiloChatServer implements Runnable {
                 sendMsg(msg); // Envía el mensaje a todos los clientes
             }
         } catch (IOException ioe) {
-            System.out.println(ioe.toString());
+            System.out.println("Error en el hilo del usuario: " + ioe.toString());
+        } finally {
+            // Cerrar recursos
+            try {
+                if (socket != null) {
+                    socket.close();
+                }
+                if (netIn != null) {
+                    netIn.close();
+                }
+                if (netOut != null) {
+                    netOut.close();
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
     }
 }
