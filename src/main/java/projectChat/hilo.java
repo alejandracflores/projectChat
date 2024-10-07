@@ -5,10 +5,8 @@
 package projectChat;
 
 import java.io.DataInputStream;
-import java.io.DataOutputStream;
 import java.io.IOException;
-import java.net.Socket;
-import java.util.Scanner;
+import java.util.ArrayList;
 import javax.swing.JTextArea;
 
 /**
@@ -19,31 +17,31 @@ public class hilo extends Thread {
     DataInputStream netIn;
     // JTextArea para mostrar los mensajes
     JTextArea mostrarMensajes;
-    // JTextArea para mostrar la lista de usuarios
-    JTextArea mostrarContactos;
-    
-    
-    // Constructor de mostrarContactos y mostrarMensajes
-    public hilo(DataInputStream netIn, JTextArea mostrarMensajes, JTextArea mostrarContactos) {
+    // Referencia a la ventana principal del chat (para actualizar contactos)
+    chat mainChat;
+
+    // Constructor que recibe el flujo de entrada, el área de mensajes y la referencia a la ventana principal
+    public hilo(DataInputStream netIn, JTextArea mostrarMensajes, chat mainChat) {
         this.netIn = netIn;
-        // Asignar el área de texto de mensajes
         this.mostrarMensajes = mostrarMensajes;
-        // Asignar el área de texto de contactos
-        this.mostrarContactos = mostrarContactos;
+        this.mainChat = mainChat;
     }
 
     public void run() {
         try {
             while (true) {
                 String mensaje = netIn.readUTF();
+                mostrarMensajes.append(mensaje + "\n");
                 
                 // Verifica si el mensaje es la lista de usuarios
-                if (mensaje.startsWith("Usuarios conectados: ")) {
-                    // Actualizar la lista de contactos
-                    mostrarContactos.setText(mensaje);
-                } else {
-                    // Mostrar mensajes regulares
-                    mostrarMensajes.append(mensaje + "\n");
+                if (mensaje.startsWith("Usuarios conectados:")) {
+                    String[] partes = mensaje.replace("Usuarios conectados: [", "").replace("]", "").split(", ");
+                    ArrayList<String> usuarios = new ArrayList<>();
+                    for (String user : partes) {
+                        usuarios.add(user);
+                    }
+                    // Actualizar la lista de contactos llamando al método de la ventana principal
+                    mainChat.actualizarContactos(usuarios);
                 }
             }
         } catch (IOException ioe) {
