@@ -8,6 +8,17 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.net.Socket;
 import java.io.IOException;
+import java.util.ArrayList;
+import javax.swing.JButton;
+import javax.swing.JFrame;
+import javax.swing.JPanel;
+import javax.swing.JTextArea;
+import javax.swing.JTextField;
+import javax.swing.BoxLayout;
+import javax.swing.JScrollPane;
+import java.awt.BorderLayout;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 
 /**
  *
@@ -45,8 +56,7 @@ public class chat extends javax.swing.JFrame {
         mostrarMensajes = new javax.swing.JTextArea();
         message = new javax.swing.JTextField();
         send = new javax.swing.JButton();
-        jScrollPane2 = new javax.swing.JScrollPane();
-        mostrarContactos = new javax.swing.JTextArea();
+        panelContactos = new javax.swing.JPanel();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
@@ -83,9 +93,16 @@ public class chat extends javax.swing.JFrame {
             }
         });
 
-        mostrarContactos.setColumns(20);
-        mostrarContactos.setRows(5);
-        jScrollPane2.setViewportView(mostrarContactos);
+        javax.swing.GroupLayout panelContactosLayout = new javax.swing.GroupLayout(panelContactos);
+        panelContactos.setLayout(panelContactosLayout);
+        panelContactosLayout.setHorizontalGroup(
+            panelContactosLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGap(0, 0, Short.MAX_VALUE)
+        );
+        panelContactosLayout.setVerticalGroup(
+            panelContactosLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGap(0, 0, Short.MAX_VALUE)
+        );
 
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
@@ -93,33 +110,32 @@ public class chat extends javax.swing.JFrame {
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
                 .addGap(25, 25, 25)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
                     .addGroup(layout.createSequentialGroup()
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
                             .addComponent(jLabel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                             .addComponent(user))
-                        .addGap(84, 84, 84)
+                        .addGap(100, 100, 100)
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addComponent(jLabel2)
                             .addComponent(puerto, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                        .addGap(105, 105, 105)
+                        .addGap(100, 100, 100)
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                            .addGroup(layout.createSequentialGroup()
-                                .addComponent(jLabel3)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                            .addComponent(jLabel3)
                             .addGroup(layout.createSequentialGroup()
                                 .addComponent(ip, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                                .addComponent(connect_button))))
-                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                        .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                        .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 353, javax.swing.GroupLayout.PREFERRED_SIZE))
-                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
+                                .addGap(100, 100, 100)
+                                .addComponent(connect_button)))
+                        .addGap(0, 0, Short.MAX_VALUE))
+                    .addGroup(layout.createSequentialGroup()
                         .addComponent(message)
                         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                        .addComponent(send)))
-                .addGap(152, 152, 152))
+                        .addComponent(send))
+                    .addGroup(layout.createSequentialGroup()
+                        .addComponent(panelContactos, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addGap(18, 18, 18)
+                        .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 353, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                .addGap(159, 159, 159))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -135,15 +151,15 @@ public class chat extends javax.swing.JFrame {
                     .addComponent(ip, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(user, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(connect_button))
-                .addGap(18, 18, 18)
+                .addGap(21, 21, 21)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                    .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 188, Short.MAX_VALUE)
-                    .addComponent(jScrollPane2))
-                .addGap(18, 18, 18)
+                    .addComponent(jScrollPane1, javax.swing.GroupLayout.DEFAULT_SIZE, 249, Short.MAX_VALUE)
+                    .addComponent(panelContactos, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(message, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(send))
-                .addContainerGap(141, Short.MAX_VALUE))
+                .addContainerGap(77, Short.MAX_VALUE))
         );
 
         pack();
@@ -157,22 +173,20 @@ public class chat extends javax.swing.JFrame {
     private void connect_buttonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_connect_buttonActionPerformed
         String servidor, username;
         int puerto;
-        
         servidor = ip.getText();
         puerto = Integer.parseInt(this.puerto.getText());
         username = user.getText();
-        try{
+        try {
             socket = new Socket(servidor, puerto);
             netIn = new DataInputStream(socket.getInputStream());
             netOut = new DataOutputStream(socket.getOutputStream());
-            
+
             netOut.writeUTF(username);
-            
-            // Crear el hilo y pasar mostrarMensajes y mostrarContactos
-            hilo thread = new hilo(netIn, mostrarMensajes, mostrarContactos);
+
+            // Crear el hilo y pasar mostrarMensajes y panelContactos
+            hilo thread = new hilo(netIn, mostrarMensajes, this);
             thread.start();
-        }catch(IOException e){
-            // En caso de error
+        } catch (IOException e) {
             mostrarMensajes.append("Error al conectar.\n");
         }
     }//GEN-LAST:event_connect_buttonActionPerformed
@@ -193,6 +207,112 @@ public class chat extends javax.swing.JFrame {
             }
         }
     }//GEN-LAST:event_sendActionPerformed
+
+
+    // Mostrar los contactos como botones
+    public void actualizarContactos(ArrayList<String> usuariosConectados) {
+        // Eliminar botones anteriores
+        panelContactos.removeAll();
+
+        // Usar BoxLayout para alinear los botones verticalmente
+        panelContactos.setLayout(new BoxLayout(panelContactos, BoxLayout.Y_AXIS));
+
+        for (String usuario : usuariosConectados) {
+            JButton botonUsuario = new JButton(usuario);
+            botonUsuario.addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    // Clic para abrir un chat privado
+                    iniciarChatPrivado(usuario);
+                }
+            });
+            panelContactos.add(botonUsuario);
+        }
+
+        panelContactos.revalidate(); // Actualizar el panel
+        panelContactos.repaint();     // Repaint para reflejar los cambios
+    }
+    
+    public void iniciarChatGrupal() {
+        JFrame ventanaGrupal = new JFrame("Chat Grupal");
+        ventanaGrupal.setSize(400, 300);
+
+        JTextArea areaMensajes = new JTextArea();
+        areaMensajes.setEditable(false);
+        JTextField campoMensaje = new JTextField(20);
+        JButton botonEnviar = new JButton("Enviar");
+
+        botonEnviar.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                String mensaje = campoMensaje.getText();
+                if (!mensaje.isEmpty()) {
+                    enviarMensajeGrupal(mensaje);
+                    campoMensaje.setText("");
+                    areaMensajes.append("Tú: " + mensaje + "\n");
+                }
+            }
+        });
+
+        JPanel panelInferior = new JPanel();
+        panelInferior.add(campoMensaje);
+        panelInferior.add(botonEnviar);
+
+        ventanaGrupal.add(new JScrollPane(areaMensajes), BorderLayout.CENTER);
+        ventanaGrupal.add(panelInferior, BorderLayout.SOUTH);
+
+        ventanaGrupal.setVisible(true);
+    }
+    
+    // Método para enviar mensaje al chat grupal
+    public void enviarMensajeGrupal(String mensaje) {
+        try {
+            netOut.writeUTF("/grupal " + mensaje);
+        } catch (IOException e) {
+            mostrarMensajes.append("Error al enviar mensaje grupal.\n");
+        }
+    }
+
+    // Abrir una ventana de chat privado
+    public void iniciarChatPrivado(String usuarioDestino) {
+        JFrame ventanaPrivada = new JFrame("Chat privado con " + usuarioDestino);
+        ventanaPrivada.setSize(400, 300);
+
+        JTextArea areaMensajes = new JTextArea();
+        areaMensajes.setEditable(false);
+        JTextField campoMensaje = new JTextField(20);
+        JButton botonEnviar = new JButton("Enviar");
+
+        botonEnviar.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                String mensaje = campoMensaje.getText();
+                if (!mensaje.isEmpty()) {
+                    enviarMensajePrivado(usuarioDestino, mensaje);
+                    campoMensaje.setText("");
+                    areaMensajes.append("Tú: " + mensaje + "\n");
+                }
+            }
+        });
+
+        JPanel panelInferior = new JPanel();
+        panelInferior.add(campoMensaje);
+        panelInferior.add(botonEnviar);
+
+        ventanaPrivada.add(new JScrollPane(areaMensajes), BorderLayout.CENTER);
+        ventanaPrivada.add(panelInferior, BorderLayout.SOUTH);
+
+        ventanaPrivada.setVisible(true);
+    }
+
+    // Enviar mensaje privado al usuario destino
+    public void enviarMensajePrivado(String usuarioDestino, String mensaje) {
+        try {
+            netOut.writeUTF("/privado " + usuarioDestino + " " + mensaje);
+        } catch (IOException e) {
+            mostrarMensajes.append("Error al enviar mensaje privado.\n");
+        }
+    }
 
     /**
      * @param args the command line arguments
@@ -236,10 +356,9 @@ public class chat extends javax.swing.JFrame {
     private javax.swing.JLabel jLabel2;
     private javax.swing.JLabel jLabel3;
     private javax.swing.JScrollPane jScrollPane1;
-    private javax.swing.JScrollPane jScrollPane2;
     private javax.swing.JTextField message;
-    private javax.swing.JTextArea mostrarContactos;
     private javax.swing.JTextArea mostrarMensajes;
+    private javax.swing.JPanel panelContactos;
     private javax.swing.JTextField puerto;
     private javax.swing.JButton send;
     private javax.swing.JTextField user;
