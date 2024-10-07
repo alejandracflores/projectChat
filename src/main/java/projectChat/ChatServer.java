@@ -8,11 +8,12 @@ import java.util.HashMap;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.Vector;
+import java.lang.*;
 
 public class ChatServer extends Thread {
-    private final Vector<Socket> vector = new Vector<>();
-    private final HashMap<String, Socket> usuarios = new HashMap<>();
-    private final int port;
+    private Vector<Socket> vector = new Vector<Socket>();
+    private HashMap<String, Socket> usuarios = new HashMap<>();
+    private int port;
 
     public ChatServer(int port) {
         this.port = port;
@@ -20,11 +21,12 @@ public class ChatServer extends Thread {
 
     private ServerSocket connect() {
         try {
-            return new ServerSocket(port);
+            ServerSocket sSocket = new ServerSocket(port);
+            return sSocket;
         } catch (IOException ioe) {
-            System.out.println("No se pudo realizar la conexión en el puerto " + port);
-            return null;
+            System.out.println("No se pudo realizar la conexión");
         }
+        return null;
     }
 
     public void principal() {
@@ -41,7 +43,7 @@ public class ChatServer extends Thread {
                             DataOutputStream netOut = new DataOutputStream(socket.getOutputStream());
                             netOut.writeUTF(userList);
                         } catch (IOException ioe) {
-                            System.out.println("Error al enviar lista de usuarios: " + ioe.getMessage());
+                            ioe.printStackTrace();
                         }
                     }
                 }
@@ -53,9 +55,10 @@ public class ChatServer extends Thread {
                     Socket socket = sSocket.accept();
                     vector.add(socket);
                     Thread hilo = new Thread(new HiloChatServer(socket, vector, usuarios));
+
                     hilo.start();
                 } catch (IOException ioe) {
-                    System.out.println("Error al aceptar la conexión: " + ioe.getMessage());
+                    ioe.printStackTrace();
                 }
             }
         } else {
@@ -64,16 +67,7 @@ public class ChatServer extends Thread {
     }
 
     public static void main(String[] args) {
-        if (args.length != 1) {
-            System.out.println("Uso: java ChatServer <puerto>");
-            return;
-        }
-        try {
-            int port = Integer.parseInt(args[0]);
-            ChatServer chat = new ChatServer(port);
-            chat.principal();
-        } catch (NumberFormatException e) {
-            System.out.println("El puerto debe ser un número válido.");
-        }
+        ChatServer chat = new ChatServer(Integer.parseInt(args[0]));
+        chat.principal();
     }
 }
