@@ -1,31 +1,25 @@
 package projectChat;
-
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
 import java.util.HashMap;
 import java.util.Vector;
-
 public class HiloChatServer implements Runnable {
-
     private Socket socket;
     private Vector<Socket> vector;
     private HashMap<String, Socket> usuarios;
     private DataInputStream netIn;
     private DataOutputStream netOut;
-
     public HiloChatServer(Socket socket, Vector<Socket> vector, HashMap<String, Socket> usuarios) {
         this.socket = socket;
         this.vector = vector;
         this.usuarios = usuarios;
     }
-
     private void initStreams() throws IOException {
         netIn = new DataInputStream(socket.getInputStream());
         netOut = new DataOutputStream(socket.getOutputStream());
     }
-
     private void sendMsg(String msg, boolean isServerMessage) throws IOException {
         // Si es un mensaje privado
         String[] tokens = msg.split("\\^");
@@ -34,7 +28,6 @@ public class HiloChatServer implements Runnable {
             String privateMsg = tokens[2];
             String sender = tokens[3];
             Socket recipientSocket = usuarios.get(recipient);
-
             if (recipientSocket != null) {
                 try {
                     String encryptedMsg = AESUtil.encrypt(privateMsg);
@@ -56,13 +49,11 @@ public class HiloChatServer implements Runnable {
                         break;
                     }
                 }
-
                 if (sender != null) {
                     // Agregar el remitente al mensaje si es un mensaje grupal
                     msg = sender + ": " + msg;
                 }
             }
-
             // Enviar el mensaje a todos los clientes (con o sin remitente)
             for (Socket soc : vector) {
                 DataOutputStream out = new DataOutputStream(soc.getOutputStream());
@@ -70,22 +61,30 @@ public class HiloChatServer implements Runnable {
             }
         }
     }
-
-
+    private void sendFile(String recipient, String sender, byte[] fileBytes, String fileName) throws IOException {
+    Socket recipientSocket = usuarios.get(recipient);
+    if (recipientSocket != null) {
+        DataOutputStream out = new DataOutputStream(recipientSocket.getOutputStream());
+        // Enviar un mensaje al destinatario indicando que recibió un archivo
+        out.writeUTF("Archivo de " + sender + ": " + fileName);
+        // Enviar los bytes del archivo
+        out.writeInt(fileBytes.length);  // Primero enviar el tamaño del archivo
+        out.write(fileBytes);  // Luego enviar el contenido del archivo
+    } else {
+        netOut.writeUTF("Error: Usuario " + recipient + " no está conectado.");
+    }
+}
     public void run() {
         String username = null;
         try {
             initStreams();
-
             // Pide el nombre de usuario al cliente
             username = netIn.readUTF();
             // Agrega el nombre de usuario y socket al hashmap
             usuarios.put(username, socket);
-
             // Notifica a todos que el usuario se ha unido (mensaje del servidor)
             String joinMsg = username + " se ha unido";
             sendMsg(joinMsg, true);  // true indica que es un mensaje del servidor
-
             while (true) {
                 String msg = netIn.readUTF();
                 // Envía el mensaje a todos los clientes (mensaje normal)
@@ -98,7 +97,6 @@ public class HiloChatServer implements Runnable {
             if (username != null) {
                 usuarios.remove(username);
                 vector.remove(socket);
-
                 String leaveMsg = username + " ha salido de la conexión.";
                 try {
                     // true indica que es un mensaje del servidor
@@ -107,7 +105,6 @@ public class HiloChatServer implements Runnable {
                     System.out.println("Error al enviar el mensaje de desconexión.");
                 }
             }
-
             // Cerrar recursos
             try {
                 if (socket != null) {
@@ -121,7 +118,4 @@ public class HiloChatServer implements Runnable {
                 }
             } catch (IOException e) {
                 e.printStackTrace();
-            }
-        }
-    }
-}
+            }}}}

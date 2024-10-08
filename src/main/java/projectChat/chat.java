@@ -6,6 +6,12 @@ package projectChat;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.InputStream;
+import java.io.OutputStream;
+import javax.swing.JFileChooser;
 import java.net.Socket;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -274,7 +280,7 @@ public class chat extends javax.swing.JFrame {
     }
 
     // Abrir una ventana de chat privado
-    public void iniciarChatPrivado(String usuarioDestino) {
+ public void iniciarChatPrivado(String usuarioDestino) {
         JFrame ventanaPrivada = new JFrame("Chat privado con " + usuarioDestino);
         ventanaPrivada.setSize(400, 300);
 
@@ -282,6 +288,7 @@ public class chat extends javax.swing.JFrame {
         areaMensajes.setEditable(false);
         JTextField campoMensaje = new JTextField(20);
         JButton botonEnviar = new JButton("Enviar");
+        JButton botonArchivo = new JButton("Enviar Archivo");
 
         botonEnviar.addActionListener(new ActionListener() {
             @Override
@@ -295,9 +302,27 @@ public class chat extends javax.swing.JFrame {
             }
         });
 
+        botonArchivo.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                JFileChooser fileChooser = new JFileChooser();
+                int res = fileChooser.showOpenDialog(null);
+                if (res == JFileChooser.APPROVE_OPTION) {
+                    File archivo = fileChooser.getSelectedFile();
+                    if (archivo.length() <= 50 * 1024 * 1024) { 
+                        enviarArchivoPrivado(usuarioDestino, archivo);
+                        areaMensajes.append("Archivo enviado: " + archivo.getName() + "\n");
+                    } else {
+                        areaMensajes.append("El archivo excede el tamaño permitido.\n");
+                    }
+                }
+            }
+        });
+
         JPanel panelInferior = new JPanel();
         panelInferior.add(campoMensaje);
         panelInferior.add(botonEnviar);
+        panelInferior.add(botonArchivo);
 
         ventanaPrivada.add(new JScrollPane(areaMensajes), BorderLayout.CENTER);
         ventanaPrivada.add(panelInferior, BorderLayout.SOUTH);
@@ -305,13 +330,64 @@ public class chat extends javax.swing.JFrame {
         ventanaPrivada.setVisible(true);
     }
 
-    // Enviar mensaje privado al usuario destino
     public void enviarMensajePrivado(String usuarioDestino, String mensaje) {
         try {
             netOut.writeUTF("/privado " + usuarioDestino + " " + mensaje);
         } catch (IOException e) {
             mostrarMensajes.append("Error al enviar mensaje privado.\n");
         }
+    }
+
+    public void enviarArchivoPrivado(String usuarioDestino, File archivo) {
+        try {
+            netOut.writeUTF("/archivo " + usuarioDestino + " " + archivo.getName());
+            FileInputStream fileInput = new FileInputStream(archivo);
+            byte[] buffer = new byte[4096];
+            int bytes;
+            while ((bytes = fileInput.read(buffer)) != -1) {
+                netOut.write(buffer, 0, bytes);
+                netOut.flush();
+            }
+            fileInput.close();
+            mostrarMensajes.append("Archivo enviado: " + archivo.getName() + "\n");
+        } catch (IOException ioe) {
+            mostrarMensajes.append("Error al enviar archivo.\n");
+        }
+    }
+
+    public void recibirArchivoPrivado(String nombreArchivo) {
+        try {
+            File archivo = new File("archivos_recibidos/" + nombreArchivo);
+            archivo.getParentFile().mkdirs();
+            FileOutputStream fileOut = new FileOutputStream(archivo);
+            byte[] buffer = new byte[4096];
+            int bytes;
+            while ((bytes = netIn.read(buffer)) != -1) {
+                fileOut.write(buffer, 0, bytes);
+            }
+            fileOut.close();
+            mostrarArchivoRecibido(archivo.getPath());
+        } catch (IOException ioe) {
+            mostrarMensajes.append("Error al recibir el archivo\n");
+        }
+    }
+
+    public void mostrarArchivoRecibido(String rutaArchivo) {
+        JButton botonDescarga = new JButton("Descargar: " + new File(rutaArchivo).getName());
+        botonDescarga.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                try {
+                    java.awt.Desktop.getDesktop().open(new File(rutaArchivo));
+                } catch (IOException ex) {
+                    mostrarMensajes.append("Error al abrir el archivo.\n");
+                }
+            }
+        });
+        mostrarMensajes.append("Archivo recibido: " + new File(rutaArchivo).getName() + "\n");
+        mostrarMensajes.append("Ruta del archivo: "+ rutaArchivo + "\n");
+        mostrarMensajes.add(botonDescarga);
+        mostrarMensajes.revalidate();
     }
 
     /**
