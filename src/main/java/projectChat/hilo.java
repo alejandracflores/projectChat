@@ -31,17 +31,23 @@ public class hilo extends Thread {
         try {
             while (true) {
                 String mensaje = netIn.readUTF();
-                mostrarMensajes.append(mensaje + "\n");
-                
+
                 // Verifica si el mensaje es la lista de usuarios
                 if (mensaje.startsWith("Usuarios conectados:")) {
+                    // Imprime en la consola del servidor en lugar de en el área de mensajes
+                    System.out.println(mensaje); // Aquí lo imprimimos en la consola
+
+                    // Procesa la lista de usuarios conectados
                     String[] partes = mensaje.replace("Usuarios conectados: [", "").replace("]", "").split(", ");
                     ArrayList<String> usuarios = new ArrayList<>();
                     for (String user : partes) {
                         usuarios.add(user);
                     }
-                    // Actualizar la lista de contactos llamando al método de la ventana principal
+                    // Actualiza la lista de contactos llamando al método de la ventana principal
                     mainChat.actualizarContactos(usuarios);
+                } else {
+                    // Si no es un mensaje de lista de usuarios, lo mostramos en el área de mensajes
+                    mostrarMensajes.append(mensaje + "\n");
                 }
             }
         } catch (IOException ioe) {
