@@ -5,7 +5,18 @@
 package projectChat;
 
 import java.io.DataInputStream;
+import java.util.*;
+import java.io.*;
+import java.awt.event.*;
+import java.awt.*;
+import javax.swing.*;
 import java.io.DataOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.InputStream;
+import java.io.OutputStream;
+import javax.swing.JFileChooser;
 import java.net.Socket;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -28,12 +39,16 @@ public class chat extends javax.swing.JFrame {
     Socket socket;
     DataInputStream netIn;
     DataOutputStream netOut;
-
+    
+    private Map<String, JFrame> chatPrivadoVentanas = new HashMap<>();
+    private Map<String, JTextArea> chatPrivadoAreas = new HashMap<>();
+    private ArrayList<ventanaPrivada> listaVentanasPrivadas;
     /**
      * Creates new form chat
      */
     public chat() {
         initComponents();
+        listaVentanasPrivadas = new ArrayList<>();
     }
 
     /**
@@ -275,45 +290,164 @@ public class chat extends javax.swing.JFrame {
 
     // Abrir una ventana de chat privado
     public void iniciarChatPrivado(String usuarioDestino) {
-        JFrame ventanaPrivada = new JFrame("Chat privado con " + usuarioDestino);
-        ventanaPrivada.setSize(400, 300);
+        if (!chatPrivadoVentanas.containsKey(usuarioDestino)) {
+            JFrame ventanaPrivada = new JFrame("Chat privado con " + usuarioDestino);
+            ventanaPrivada.setSize(400, 300);
 
-        JTextArea areaMensajes = new JTextArea();
-        areaMensajes.setEditable(false);
-        JTextField campoMensaje = new JTextField(20);
-        JButton botonEnviar = new JButton("Enviar");
+            JTextArea areaMensajes = new JTextArea();
+            areaMensajes.setEditable(false);
+            JScrollPane scrollPane = new JScrollPane(areaMensajes);
+            JTextField campoMensaje = new JTextField(20);
+            JButton botonEnviar = new JButton("Enviar");
+            JButton botonArchivo = new JButton("Enviar Archivo");
 
-        botonEnviar.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                String mensaje = campoMensaje.getText();
-                if (!mensaje.isEmpty()) {
-                    enviarMensajePrivado(usuarioDestino, mensaje);
-                    campoMensaje.setText("");
-                    areaMensajes.append("Tú: " + mensaje + "\n");
+            botonEnviar.addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    String mensaje = campoMensaje.getText();
+                    if (!mensaje.isEmpty()) {
+                        enviarMensajePrivado(usuarioDestino, mensaje);
+                        areaMensajes.append("Tú: " + mensaje + "\n");
+                        campoMensaje.setText("");
+                    }
                 }
-            }
-        });
+            });
 
-        JPanel panelInferior = new JPanel();
-        panelInferior.add(campoMensaje);
-        panelInferior.add(botonEnviar);
+            botonArchivo.addActionListener(new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    JFileChooser fileChooser = new JFileChooser();
+                    int result = fileChooser.showOpenDialog(ventanaPrivada);
+                    if (result == JFileChooser.APPROVE_OPTION) {
+                        File selectedFile = fileChooser.getSelectedFile();
+                        enviarArchivoPrivado(usuarioDestino, selectedFile);
+                    }
+                }
+            });
 
-        ventanaPrivada.add(new JScrollPane(areaMensajes), BorderLayout.CENTER);
-        ventanaPrivada.add(panelInferior, BorderLayout.SOUTH);
+            JPanel panelInferior = new JPanel();
+            panelInferior.add(campoMensaje);
+            panelInferior.add(botonEnviar);
+            panelInferior.add(botonArchivo);
 
-        ventanaPrivada.setVisible(true);
+            ventanaPrivada.add(scrollPane, BorderLayout.CENTER);
+            ventanaPrivada.add(panelInferior, BorderLayout.SOUTH);
+
+            ventanaPrivada.setVisible(true);
+            chatPrivadoVentanas.put(usuarioDestino, ventanaPrivada);
+            chatPrivadoAreas.put(usuarioDestino, areaMensajes);
+        } else {
+            chatPrivadoVentanas.get(usuarioDestino).toFront();
+        }
     }
 
-    // Enviar mensaje privado al usuario destino
-    public void enviarMensajePrivado(String usuarioDestino, String mensaje) {
+   public void enviarMensajePrivado(String usuarioDestino, String mensaje) {
         try {
-            netOut.writeUTF("/privado " + usuarioDestino + " " + mensaje);
-        } catch (IOException e) {
+            String mensajeEncriptado = AESUtil.encrypt(mensaje);
+            netOut.writeUTF("/privado " + usuarioDestino + " " + mensajeEncriptado);
+            
+            // Añadir el mensaje a ambas ventanas de chat
+            JTextArea areaRemitente = chatPrivadoAreas.get(usuarioDestino);
+            if (areaRemitente != null) {
+                areaRemitente.append("Tú: " + mensaje + "\n");
+            }
+            
+            // Simular la recepción del mensaje en la ventana del destinatario
+            recibirMensajePrivado(user.getText(), usuarioDestino + " " + mensajeEncriptado);
+        } catch (Exception e) {
             mostrarMensajes.append("Error al enviar mensaje privado.\n");
         }
     }
 
+    public void enviarArchivoPrivado(String usuarioDestino, File archivo) {
+        try {
+            String nombreArchivo = archivo.getName();
+            long tamanoArchivo = archivo.length();
+            
+            netOut.writeUTF("/archivo " + usuarioDestino + " " + nombreArchivo + " " + tamanoArchivo);
+            
+            FileInputStream fis = new FileInputStream(archivo);
+            byte[] buffer = new byte[4096];
+            int bytesRead;
+            while ((bytesRead = fis.read(buffer)) != -1) {
+                netOut.write(buffer, 0, bytesRead);
+            }
+            fis.close();
+            
+            JTextArea areaMensajes = chatPrivadoAreas.get(usuarioDestino);
+            if (areaMensajes != null) {
+                areaMensajes.append("Tú: Archivo enviado - " + nombreArchivo + "\n");
+            }
+        } catch (IOException e) {
+            mostrarMensajes.append("Error al enviar el archivo.\n");
+        }
+    }
+
+    public void recibirArchivoPrivado(String remitente, String nombreArchivo, long tamanoArchivo) {
+        try {
+            File archivo = new File("archivos_recibidos/" + nombreArchivo);
+            archivo.getParentFile().mkdirs();
+            FileOutputStream fos = new FileOutputStream(archivo);
+            
+            byte[] buffer = new byte[4096];
+            long bytesRestantes = tamanoArchivo;
+            int bytesRead;
+            while (bytesRestantes > 0 && (bytesRead = netIn.read(buffer, 0, (int)Math.min(buffer.length, bytesRestantes))) != -1) {
+                fos.write(buffer, 0, bytesRead);
+                bytesRestantes -= bytesRead;
+            }
+            fos.close();
+
+            JTextArea areaMensajes = chatPrivadoAreas.get(remitente);
+            if (areaMensajes != null) {
+                areaMensajes.append(remitente + ": Archivo recibido - " + nombreArchivo + "\n");
+                JButton botonAbrir = new JButton("Abrir " + nombreArchivo);
+                botonAbrir.addActionListener(e -> {
+                    try {
+                        Desktop.getDesktop().open(archivo);
+                    } catch (IOException ex) {
+                        areaMensajes.append("Error al abrir el archivo.\n");
+                    }
+                });
+                JPanel panelArchivo = new JPanel();
+                panelArchivo.add(botonAbrir);
+                areaMensajes.add(panelArchivo);
+                areaMensajes.revalidate();
+            }
+        } catch (IOException e) {
+            mostrarMensajes.append("Error al recibir el archivo.\n");
+        }
+    }
+
+    private ventanaPrivada buscarVentanaPrivada(String remitente) {
+    for (ventanaPrivada ventana : listaVentanasPrivadas) {
+        if (ventana.getUsuario().equals(remitente)) {
+            return ventana;
+        }
+    }
+    return null;
+}
+
+public void recibirMensajePrivado(String remitente, String contenido) {
+    ventanaPrivada ventana = buscarVentanaPrivada(remitente);
+    if (ventana == null) {
+        ventana = new ventanaPrivada(remitente, this);
+        listaVentanasPrivadas.add(ventana);
+    }
+    // Mostrar el mensaje desencriptado en la ventana privada
+    ventana.recibirMensajePrivado(remitente, contenido);
+}
+    
+    public void mostrarMensaje(String usuario, String mensaje){
+        if(!chatPrivadoVentanas.containsKey(usuario)){
+            iniciarChatPrivado(usuario);
+        }
+        JTextArea areaMensajes = chatPrivadoAreas.get(usuario);
+        if(areaMensajes != null){
+            areaMensajes.append(mensaje + "\n");
+            areaMensajes.setCaretPosition(areaMensajes.getDocument().getLength());
+        }
+    }
     /**
      * @param args the command line arguments
      */
@@ -363,4 +497,7 @@ public class chat extends javax.swing.JFrame {
     private javax.swing.JButton send;
     private javax.swing.JTextField user;
     // End of variables declaration//GEN-END:variables
+public class privado extends JFrame{
+    
+}
 }
