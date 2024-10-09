@@ -1,0 +1,11 @@
+Instrucciones para instalar el programa de Chat:
+1. Ubicación del Archivo: Asegúrate de estar en la carpeta donde se encuentra el archivo RunChat.bat.
+2. Ejecutar el Archivo
+	- Método 1: Haz doble clic en el archivo llamado RunChat.bat. Esto abrirá una ventana de la consola y ejecutará la aplicación automáticamente.
+	- Método 2: Si prefieres ejecutar la aplicación desde la línea de comandos, sigue estos pasos:
+		- Abre la terminal (símbolo del sistema).
+		- Navega hasta la carpeta donde se encuentra RunChat.bat utilizando el comando cd (por ejemplo, cd C:\ruta\de\tu\proyecto).
+		- Una vez dentro de la carpeta, escribe el siguiente comando y presiona Enter:
+			RunChat.bat
+3. Configuración Inicial: Si es la primera vez que ejecutas la aplicación, asegúrate de haber configurado cualquier archivo necesario o ajustes de red según las indicaciones del manual.
+4. Interacción con el Chat: Una vez que la aplicación esté en funcionamiento, podrás empezar a enviar y recibir mensajes.
